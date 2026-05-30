@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cierre de Caja</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        .cierre-box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .row-calc { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #edf2f7; align-items: center; font-size: 15px; }
+        .row-calc:last-child { border-bottom: none; }
+        .label-title { font-weight: bold; color: #4a5568; }
+        .val-display { font-weight: bold; font-size: 16px; color: #2d3748; }
+        input[type="number"], input[type="text"] { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; width: 140px; text-align: right; font-size: 14px; }
+        .highlight-row { background: #fefaf0; padding: 12px 5px; border-radius: 4px; border-left: 4px solid #e67e22; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Ventas</a>
+        <a href="pedidos.html">Registro Pedidos</a>
+        <a href="materia_prima.html">Materia Prima</a>
+        <a href="conteo.html">Conteo e Historial</a>
+        <a href="cierre.html" class="active">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <h1>Cierre de Caja</h1>
+        <div class="cierre-box">
+            
+            <div class="row-calc">
+                <span class="label-title">Fecha Actual:</span>
+                <span id="fecha-hoy" class="val-display">-</span>
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Nombre Responsable:</span>
+                <input type="text" id="nombre-cajero" placeholder="Cajero" oninput="guardarEstadoCierre()">
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Inicio de Caja (Bs):</span>
+                <input type="number" id="inicio-caja" value="0" oninput="calcularCierre()">
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Venta Total (Bs):</span>
+                <span id="venta-total" class="val-display">0</span>
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Transferencias (QR) (Bs):</span>
+                <span id="transferencias" class="val-display">0</span>
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Pagos Online (Pedidos Ya) (Bs):</span>
+                <span id="pagos-online" class="val-display">0</span>
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Salidas / Gastos (Bs):</span>
+                <input type="number" id="salidas" value="0" oninput="calcularCierre()">
+            </div>
+
+            <div class="row-calc highlight-row">
+                <span class="label-title">Venta En Efectivo (Bs):</span>
+                <span id="venta-efectivo" class="val-display" style="color: #27ae60;">0</span>
+            </div>
+
+            <div class="row-calc">
+                <span class="label-title">Para Depósito (Bs):</span>
+                <span id="para-deposito" class="val-display">0</span>
+            </div>
+
+            <div class="row-calc highlight-row" style="border-left-color: #2ecc71;">
+                <span class="label-title">Cierre de Caja (Bs):</span>
+                <span id="cierre-total" class="val-display" style="color: #2980b9;">0</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Colocar fecha de hoy automáticamente
+        const hoy = new Date();
+        document.getElementById('fecha-hoy').innerText = hoy.toLocaleDateString();
+
+        function calcularCierre() {
+            const registros = JSON.parse(localStorage.getItem('registros_pedidos')) || [];
+            
+            let ventaTotal = 0;
+            let transferencias = 0; // QR
+            let pagosOnline = 0;    // Pedidos Ya
+
+            registros.forEach(p => {
+                ventaTotal += p.total;
+                if(p.tipo === 'qr') transferencias += p.total;
+                if(p.tipo === 'pedidos ya') pagosOnline += p.total;
+            });
+
+            // Capturar entradas manuales
+            let inicioCaja = parseFloat(document.getElementById('inicio-caja').value) || 0;
+            let salidas = parseFloat(document.getElementById('salidas').value) || 0;
+
+            // FÓRMULA VENTA EN EFECTIVO
+            let ventaEfectivo = ventaTotal - transferencias - salidas - pagosOnline;
+
+            // Lógica de redondeos (Sobrantes)
+            // Ejemplo: si es 54, el sobrante es 4, si es 23 es 3. Mathemáticamente es efectivo % 10.
+            let sobrante = 0;
+            let paraDeposito = 0;
+
+            if (ventaEfectivo > 0) {
+                sobrante = ventaEfectivo % 10; 
+                paraDeposito = ventaEfectivo - sobrante; 
+            } else {
+                paraDeposito = ventaEfectivo; // Si es negativo se mantiene
+            }
+
+            // FÓRMULA CIERRE DE CAJA
+            let cierreCaja = inicioCaja + sobrante;
+
+            // Renderizar resultados en pantalla
+            document.getElementById('venta-total').innerText = ventaTotal;
+            document.getElementById('transferencias').innerText = transferencias;
+            document.getElementById('pagos-online').innerText = pagosOnline;
+            document.getElementById('venta-efectivo').innerText = ventaEfectivo;
+            document.getElementById('para-deposito').innerText = paraDeposito;
+            document.getElementById('cierre-total').innerText = cierreCaja;
+
+            guardarEstadoCierre();
+        }
+
+        function guardarEstadoCierre() {
+            // Guardar los inputs editables para que no se borren al refrescar
+            let estado = {
+                nombre: document.getElementById('nombre-cajero').value,
+                inicio: document.getElementById('inicio-caja').value,
+                salidas: document.getElementById('salidas').value
+            };
+            localStorage.setItem('estado_cierre_inputs', JSON.stringify(estado));
+        }
+
+        function cargarEstadoCierre() {
+            let estado = JSON.parse(localStorage.getItem('estado_cierre_inputs'));
+            if(estado) {
+                document.getElementById('nombre-cajero').value = estado.nombre || '';
+                document.getElementById('inicio-caja').value = estado.inicio || 0;
+                document.getElementById('salidas').value = estado.salidas || 0;
+            }
+            calcularCierre();
+        }
+
+        window.onload = cargarEstadoCierre;
+    </script>
+</body>
+</html>

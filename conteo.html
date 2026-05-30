@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conteo de Ventas</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 700px; margin: 20px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        .conteo-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; color: #2c3e50; }
+        .destaque { font-weight: bold; color: #e67e22; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Ventas</a>
+        <a href="pedidos.html">Registro Pedidos</a>
+        <a href="materia_prima.html">Materia Prima</a>
+        <a href="conteo.html" class="active">Conteo e Historial</a>
+        <a href="cierre.html">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <h1>Conteo General de Unidades Vendidas</h1>
+        
+        <div class="conteo-card">
+            <h2>Componentes y Complementos</h2>
+            <table>
+                <thead>
+                    <tr><th>Item</th><th>Cantidad Vendida</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Panes</td><td id="c-panes" class="destaque">0</td></tr>
+                    <tr><td>Carnes</td><td id="c-carnes" class="destaque">0</td></tr>
+                    <tr><td>Porciones de Papas Fritas (Combos/Extras)</td><td id="c-papas" class="destaque">0</td></tr>
+                    <tr><td>Bebidas (Solo Combos)</td><td id="c-bebidas" class="destaque">0</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="conteo-card">
+            <h2>Por Modelo de Hamburguesa</h2>
+            <table id="tabla-burguers">
+                <thead>
+                    <tr><th>Variedad</th><th>Unidades</th></tr>
+                </thead>
+                <tbody>
+                    <!-- Dinámico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function cargarConteos() {
+            let conteo = JSON.parse(localStorage.getItem('conteo_global')) || {
+                burguers: {}, bebidas: 0, papas: 0, carnes: 0, panes: 0
+            };
+
+            document.getElementById('c-panes').innerText = conteo.panes;
+            document.getElementById('c-carnes').innerText = conteo.carnes;
+            document.getElementById('c-papas').innerText = conteo.papas;
+            document.getElementById('c-bebidas').innerText = conteo.bebidas;
+
+            const tbodyBurguers = document.getElementById('tabla-burguers').getElementsByTagName('tbody')[0];
+            tbodyBurguers.innerHTML = '';
+
+            const listaModelos = ['Street', 'Street Hot', 'Country', 'Bogga', 'City', 'Chesse', 'Bite'];
+            listaModelos.forEach(modelo => {
+                let cantidad = conteo.burguers[modelo] || 0;
+                let row = tbodyBurguers.insertRow();
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                cell1.innerText = "Hamburguesa " + modelo;
+                cell2.innerText = cantidad;
+                cell2.className = "destaque";
+            });
+        }
+
+        window.onload = cargarConteos;
+    </script>
+</body>
+</html>

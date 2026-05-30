@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ventas - Hamburguesería</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        h1, h2 { margin-bottom: 15px; color: #2c3e50; }
+        .menu-box, .cart-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .menu-row { display: grid; grid-template-columns: 150px 1fr; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center; gap: 10px; }
+        .menu-row:last-child { border-bottom: none; }
+        .item-name { font-weight: bold; color: #34495e; }
+        .buttons-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        button { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #2980b9; }
+        button.btn-orange { background: #e67e22; }
+        button.btn-orange:hover { background: #d35400; }
+        button.btn-green { background: #2ecc71; width: 100%; padding: 12px; font-size: 16px; margin-top: 15px; }
+        button.btn-green:hover { background: #27ae60; }
+        button.btn-danger { background: #e74c3c; padding: 4px 8px; font-size: 11px; }
+        button.btn-danger:hover { background: #c0392b; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #ccc; font-size: 14px; }
+        .cart-total { margin-top: 15px; font-size: 18px; font-weight: bold; text-align: right; color: #2c3e50; }
+        .payment-section { margin-top: 15px; border-top: 2px solid #eee; padding-top: 15px; }
+        select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; background-color: #fff3e0; font-weight: bold; }
+        .alerta-precios { font-size: 12px; color: #e67e22; font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="active">Ventas</a>
+        <a href="pedidos.html">Registro Pedidos</a>
+        <a href="materia_prima.html">Materia Prima</a>
+        <a href="conteo.html">Conteo e Historial</a>
+        <a href="cierre.html">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <!-- SECCIÓN MENÚ -->
+        <div class="menu-box">
+            <h2>Menú de Hamburguesas</h2>
+            <div id="alerta-pedidosya" class="alerta-precios" style="display: none;">⚠️ MODALIDAD PEDIDOS YA ACTIVA: Precios con descuento de comisión aplicados en el menú.</div>
+            
+            <!-- Los botones ahora llaman a una función dinámica que evalúa el tipo de pago -->
+            <div class="menu-row" data-name="Street">
+                <span class="item-name">Street</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Street', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('Street', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('Street', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+            <div class="menu-row" data-name="Street Hot">
+                <span class="item-name">Street Hot</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Street Hot', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('Street Hot', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('Street Hot', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+            <div class="menu-row" data-name="Country">
+                <span class="item-name">Country</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Country', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('Country', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('Country', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+            <div class="menu-row" data-name="Bogga">
+                <span class="item-name">Bogga</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Bogga', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('Bogga', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('Bogga', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+            <div class="menu-row" data-name="City">
+                <span class="item-name">City</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('City', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('City', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('City', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+            <div class="menu-row" data-name="Chesse">
+                <span class="item-name">Chesse</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Chesse', 'Suelta')">Suelta (<span class="p-normal-suelta">40</span> Bs)</button>
+                    <button onclick="agregarMenu('Chesse', 'Con Papas')">Con Papas (<span class="p-normal-papas">50</span> Bs)</button>
+                    <button onclick="agregarMenu('Chesse', 'Combo')">Combo (<span class="p-normal-combo">60</span> Bs)</button>
+                </div>
+            </div>
+
+            <!-- Bite Burger (Mantiene sus precios fijos siempre) -->
+            <div class="menu-row" data-name="Bite Burger">
+                <span class="item-name">Bite Burger</span>
+                <div class="buttons-group">
+                    <button onclick="agregarMenu('Bite', 'Suelta')">Suelta (26 Bs)</button>
+                    <button onclick="agregarMenu('Bite', 'Con Papas')">Con Papas (36 Bs)</button>
+                    <button onclick="agregarMenu('Bite', 'Combo')">Combo (44 Bs)</button>
+                </div>
+            </div>
+
+            <!-- Papas Sueltas / Extras -->
+            <div class="menu-row" style="margin-top: 15px; background: #fef5ec; padding: 10px; border-radius: 4px;">
+                <span class="item-name">Papas Extras</span>
+                <div class="buttons-group">
+                    <button class="btn-orange" onclick="agregarPapasExtra()">Agregar Papa Extra (12 Bs)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN ORDEN EN CURSO -->
+        <div class="cart-box">
+            <h2>Orden Actual</h2>
+            <div id="cart-items-container">
+                <p style="color: #999; font-style: italic;">No hay productos añadidos.</p>
+            </div>
+            <div class="cart-total">Total: <span id="cart-total-val">0</span> Bs</div>
+
+            <div class="payment-section">
+                <label for="payment-method"><b>Tipo de Pago:</b></label>
+                <!-- Al cambiar el select, se llama a la función cambiarTipoPago() -->
+                <select id="payment-method" onchange="cambiarTipoPago()">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="qr">QR</option>
+                    <option value="pedidos ya">Pedidos Ya</option>
+                </select>
+                <button class="btn-green" onclick="registrarPedido()">Registrar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let carrito = [];
+
+        // Función para calcular el precio exacto dependiendo del tipo de pago actual seleccionado
+        function obtenerPrecio(nombreBase, variante) {
+            const tipoPago = document.getElementById('payment-method').value;
+
+            if (nombreBase === 'Bite') {
+                if (variante === 'Suelta') return 26;
+                if (variante === 'Con Papas') return 36;
+                if (variante === 'Combo') return 44;
+            }
+            
+            // Lógica especial solicitada para Pedidos Ya en hamburguesas normales
+            if (tipoPago === 'pedidos ya') {
+                if (variante === 'Suelta') return 39;
+                if (variante === 'Con Papas') return 49;
+                if (variante === 'Combo') return 58;
+            } else {
+                // Precios normales (Efectivo / QR)
+                if (variante === 'Suelta') return 40;
+                if (variante === 'Con Papas') return 50;
+                if (variante === 'Combo') return 60;
+            }
+            return 0;
+        }
+
+        // Se ejecuta cuando el cajero cambia el selector de método de pago
+        function cambiarTipoPago() {
+            const tipoPago = document.getElementById('payment-method').value;
+            const alerta = document.getElementById('alerta-pedidosya');
+
+            // 1. Modificar visualmente los números del menú para evitar confusiones
+            const sueltaTexts = document.querySelectorAll('.p-normal-suelta');
+            const papasTexts = document.querySelectorAll('.p-normal-papas');
+            const comboTexts = document.querySelectorAll('.p-normal-combo');
+
+            if (tipoPago === 'pedidos ya') {
+                alerta.style.display = 'block';
+                sueltaTexts.forEach(el => el.innerText = '39');
+                papasTexts.forEach(el => el.innerText = '49');
+                comboTexts.forEach(el => el.innerText = '58');
+            } else {
+                alerta.style.display = 'none';
+                sueltaTexts.forEach(el => el.innerText = '40');
+                papasTexts.forEach(el => el.innerText = '50');
+                comboTexts.forEach(el => el.innerText = '60');
+            }
+
+            // 2. Actualizar los precios de los ítems que ya estaban dentro del carrito
+            carrito.forEach(item => {
+                if (item.idTipo === 'hamburguesa') {
+                    item.precio = obtenerPrecio(item.nombreBase, item.variante);
+                }
+            });
+
+            actualizarCarritoUI();
+        }
+
+        function actualizarCarritoUI() {
+            const container = document.getElementById('cart-items-container');
+            const totalVal = document.getElementById('cart-total-val');
+            container.innerHTML = '';
+            
+            if(carrito.length === 0) {
+                container.innerHTML = '<p style="color: #999; font-style: italic;">No hay productos añadidos.</p>';
+                totalVal.innerText = 0;
+                return;
+            }
+
+            let total = 0;
+            carrito.forEach((item, index) => {
+                total += item.precio;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${item.nombre}</strong> <br>
+                        <small style="color:#666;">${item.detalle}</small> - ${item.precio} Bs
+                    </div>
+                    <button class="btn-danger" onclick="eliminarDelCarrito(${index})">X</button>
+                `;
+                container.appendChild(div);
+            });
+            totalVal.innerText = total;
+        }
+
+        function agregarMenu(nombre, variante) {
+            let precioCalculado = obtenerPrecio(nombre, variante);
+            carrito.push({
+                idTipo: 'hamburguesa',
+                nombre: `Hamb. ${nombre}`,
+                detalle: variante,
+                precio: precioCalculado,
+                nombreBase: nombre,
+                variante: variante
+            });
+            actualizarCarritoUI();
+        }
+
+        function agregarPapasExtra() {
+            carrito.push({
+                idTipo: 'papas_extra',
+                nombre: 'Papas Extras',
+                detalle: 'Porción Suelta',
+                precio: 12,
+                nombreBase: 'Papas Extras',
+                variante: 'Suelta'
+            });
+            actualizarCarritoUI();
+        }
+
+        function eliminarDelCarrito(index) {
+            carrito.splice(index, 1);
+            actualizarCarritoUI();
+        }
+
+        function registrarPedido() {
+            if(carrito.length === 0) {
+                alert("El pedido está vacío. Agrega productos primero.");
+                return;
+            }
+
+            let registros = JSON.parse(localStorage.getItem('registros_pedidos')) || [];
+            let conteoGlobal = JSON.parse(localStorage.getItem('conteo_global')) || {
+                burguers: {}, bebidas: 0, papas: 0, carnes: 0, panes: 0
+            };
+            let materiaPrima = JSON.parse(localStorage.getItem('materia_prima')) || {
+                panes: 0, carnes: 0, queso: 0, flor_andina: 0
+            };
+
+            const tipoPago = document.getElementById('payment-method').value;
+            let totalPedido = carrito.reduce((sum, item) => sum + item.precio, 0);
+            let nroPedido = registros.length + 1;
+
+            let nuevoPedido = {
+                id: nroPedido,
+                total: totalPedido,
+                tipo: tipoPago,
+                detalles: [...carrito]
+            };
+            registros.push(nuevoPedido);
+
+            let cantQuesoGrupo = 0;
+            let cantFlorAndinaGrupo = 0;
+
+            carrito.forEach(item => {
+                if(item.idTipo === 'hamburguesa') {
+                    conteoGlobal.burguers[item.nombreBase] = (conteoGlobal.burguers[item.nombreBase] || 0) + 1;
+                    
+                    conteoGlobal.panes += 1;
+                    conteoGlobal.carnes += 1;
+                    materiaPrima.panes -= 1;
+                    materiaPrima.carnes -= 1;
+
+                    if(['Chesse', 'Street Hot', 'Street'].includes(item.nombreBase)) {
+                        cantQuesoGrupo += 1;
+                    }
+                    if(['Country', 'City', 'Bite', 'Bogga'].includes(item.nombreBase)) {
+                        cantFlorAndinaGrupo += 1;
+                    }
+
+                    if(item.variante === 'Combo') {
+                        conteoGlobal.papas += 1;
+                        conteoGlobal.bebidas += 1;
+                    } else if(item.variante === 'Con Papas') {
+                        conteoGlobal.papas += 1;
+                    }
+                } else if(item.idTipo === 'papas_extra') {
+                    conteoGlobal.papas += 1;
+                }
+            });
+
+            if(cantQuesoGrupo > 0) {
+                materiaPrima.queso -= (cantQuesoGrupo * 0.025);
+            }
+            if(cantFlorAndinaGrupo > 0) {
+                materiaPrima.flor_andina -= (cantFlorAndinaGrupo * 0.025);
+            }
+
+            localStorage.setItem('registros_pedidos', JSON.stringify(registros));
+            localStorage.setItem('conteo_global', JSON.stringify(conteoGlobal));
+            localStorage.setItem('materia_prima', JSON.stringify(materiaPrima));
+
+            alert(`Pedido Nro ${nroPedido} registrado correctamente.`);
+            
+            // Restablecer el selector a Efectivo por comodidad para el próximo pedido
+            document.getElementById('payment-method').value = 'efectivo';
+            cambiarTipoPago();
+
+            carrito = [];
+            actualizarCarritoUI();
+        }
+    </script>
+</body>
+</html>

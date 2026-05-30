@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materia Prima</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        .inventory-box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; display: grid; grid-template-columns: 130px 1fr; align-items: center; }
+        label { font-weight: bold; color: #34495e; }
+        input[type="number"] { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+        button { background: #e67e22; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #d35400; }
+        .info-nota { margin-top: 15px; background: #edf2f7; padding: 10px; border-radius: 4px; font-size: 12px; color: #4a5568; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Ventas</a>
+        <a href="pedidos.html">Registro Pedidos</a>
+        <a href="materia_prima.html" class="active">Materia Prima</a>
+        <a href="conteo.html">Conteo e Historial</a>
+        <a href="cierre.html">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <h1>Materia Prima Disponible</h1>
+        <div class="inventory-box">
+            <div class="form-group">
+                <label for="panes">Panes:</label>
+                <input type="number" id="panes" step="1">
+            </div>
+            <div class="form-group">
+                <label for="carnes">Carnes:</label>
+                <input type="number" id="carnes" step="1">
+            </div>
+            <div class="form-group">
+                <label for="queso">Queso:</label>
+                <input type="number" id="queso" step="0.001">
+            </div>
+            <div class="form-group">
+                <label for="flor_andina">Flor Andina:</label>
+                <input type="number" id="flor_andina" step="0.001">
+            </div>
+            <button onclick="guardarMateriaPrima()">Guardar / Surtir Inventario</button>
+
+            <div class="info-nota">
+                <strong>Regla de descuentos automáticos aplicada:</strong><br>
+                • Todas las hamburguesas restan 1 Pan y 1 Carne.<br>
+                • Queso restado por (Chesse + Street Hot + Street) × 0.025.<br>
+                • Flor Andina restada por (Country + City + Bite + Bogga) × 0.025.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cargarMateriaPrima() {
+            // Inicializar por defecto si está vacío
+            let mp = JSON.parse(localStorage.getItem('materia_prima')) || {
+                panes: 100, carnes: 100, queso: 10, flor_andina: 10
+            };
+            
+            document.getElementById('panes').value = mp.panes;
+            document.getElementById('carnes').value = mp.carnes;
+            // Redondear a 3 decimales para evitar problemas de coma flotante en JS
+            document.getElementById('queso').value = Number(mp.queso).toFixed(3);
+            document.getElementById('flor_andina').value = Number(mp.flor_andina).toFixed(3);
+        }
+
+        function guardarMateriaPrima() {
+            let mp = {
+                panes: parseInt(document.getElementById('panes').value) || 0,
+                carnes: parseInt(document.getElementById('carnes').value) || 0,
+                queso: parseFloat(document.getElementById('queso').value) || 0,
+                flor_andina: parseFloat(document.getElementById('flor_andina').value) || 0
+            };
+
+            localStorage.setItem('materia_prima', JSON.stringify(mp));
+            alert("Materia prima actualizada correctamente.");
+            cargarMateriaPrima();
+        }
+
+        window.onload = cargarMateriaPrima;
+    </script>
+</body>
+</html>

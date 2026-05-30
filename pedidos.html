@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Pedidos</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        .pedido-card { background: white; padding: 15px; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .pedido-title { font-weight: bold; font-size: 16px; }
+        .actions-group { display: flex; gap: 8px; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold; color: white; }
+        .badge-efectivo { background: #2ecc71; }
+        .badge-qr { background: #9b59b6; }
+        .badge-pedidosya { background: #e74c3c; }
+        .details-box { display: none; margin-top: 10px; background: #f9f9f9; padding: 10px; border-left: 3px solid #e67e22; border-radius: 2px; }
+        button { background: #34495e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        button:hover { background: #2c3e50; }
+        .btn-danger-item { background: #e74c3c; }
+        .btn-danger-item:hover { background: #c0392b; }
+        .btn-danger-all { background: #c0392b; margin-bottom: 15px; padding: 10px; font-size: 14px; width: 100%; }
+        .btn-danger-all:hover { background: #a93226; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Ventas</a>
+        <a href="pedidos.html" class="active">Registro Pedidos</a>
+        <a href="materia_prima.html">Materia Prima</a>
+        <a href="conteo.html">Conteo e Historial</a>
+        <a href="cierre.html">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <h1>Pedidos Registrados</h1>
+        <button class="btn-danger-all" onclick="borrarTodo()">Borrar Todos los Registros del Sistema (Reset Completo)</button>
+        <div id="lista-pedidos">
+            </div>
+    </div>
+
+    <script>
+        function cargarPedidos() {
+            const container = document.getElementById('lista-pedidos');
+            const registros = JSON.parse(localStorage.getItem('registros_pedidos')) || [];
+
+            if(registros.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">No se han registrado pedidos todavía.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            registros.forEach((p, index) => {
+                let badgeClass = 'badge-efectivo';
+                if(p.tipo === 'qr') badgeClass = 'badge-qr';
+                if(p.tipo === 'pedidos ya') badgeClass = 'badge-pedidosya';
+
+                const card = document.createElement('div');
+                card.className = 'pedido-card';
+                card.innerHTML = `
+                    <div class="pedido-header">
+                        <div class="pedido-title">Pedido #${p.id} — Total: ${p.total} Bs</div>
+                        <div class="actions-group">
+                            <span class="badge ${badgeClass}">${p.tipo}</span>
+                            <button onclick="toggleDetalles(${p.id})">Detalles</button>
+                            <button class="btn-danger-item" onclick="eliminarPedidoIndividual(${index})">Eliminar Pedido</button>
+                        </div>
+                    </div>
+                    <div class="details-box" id="details-${p.id}">
+                        <strong>Desglose del pedido:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            ${p.detalles.map(item => `<li>${item.nombre} (${item.detalle}) - ${item.precio} Bs</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleDetalles(id) {
+            const box = document.getElementById(`details-${id}`);
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function eliminarPedidoIndividual(index) {
+            let registros = JSON.parse(localStorage.getItem('registros_pedidos')) || [];
+            let conteoGlobal = JSON.parse(localStorage.getItem('conteo_global')) || {
+                burguers: {}, bebidas: 0, papas: 0, carnes: 0, panes: 0
+            };
+            let materiaPrima = JSON.parse(localStorage.getItem('materia_prima')) || {
+                panes: 0, carnes: 0, queso: 0, flor_andina: 0
+            };
+
+            // Obtener el pedido que vamos a borrar para revertir su impacto en el sistema
+            let pedidoABorrar = registros[index];
+
+            if (!pedidoABorrar) return;
+
+            if (confirm(`¿Estás seguro de que deseas eliminar el Pedido #${pedidoABorrar.id}? Se devolverán los ingredientes al inventario.`)) {
+                
+                let cantQuesoGrupo = 0;
+                let cantFlorAndinaGrupo = 0;
+
+                // Revertir la lógica de materia prima y conteos ítem por ítem
+                pedidoABorrar.detalles.forEach(item => {
+                    if (item.idTipo === 'hamburguesa') {
+                        // Restar del conteo por modelo de hamburguesa
+                        if (conteoGlobal.burguers[item.nombreBase] && conteoGlobal.burguers[item.nombreBase] > 0) {
+                            conteoGlobal.burguers[item.nombreBase] -= 1;
+                        }
+                        
+                        // Devolver 1 pan y 1 carne al inventario y restarlo del conteo global
+                        conteoGlobal.panes = Math.max(0, conteoGlobal.panes - 1);
+                        conteoGlobal.carnes = Math.max(0, conteoGlobal.carnes - 1);
+                        materiaPrima.panes += 1;
+                        materiaPrima.carnes += 1;
+
+                        // Agrupar para devolver Queso (Chesse, Street Hot, Street)
+                        if (['Chesse', 'Street Hot', 'Street'].includes(item.nombreBase)) {
+                            cantQuesoGrupo += 1;
+                        }
+                        // Agrupar para devolver Flor Andina (Country, City, Bite, Bogga)
+                        if (['Country', 'City', 'Bite', 'Bogga'].includes(item.nombreBase)) {
+                            cantFlorAndinaGrupo += 1;
+                        }
+
+                        // Revertir complementos (Papas y Bebidas)
+                        if (item.variante === 'Combo') {
+                            conteoGlobal.papas = Math.max(0, conteoGlobal.papas - 1);
+                            conteoGlobal.bebidas = Math.max(0, conteoGlobal.bebidas - 1);
+                        } else if (item.variante === 'Con Papas') {
+                            conteoGlobal.papas = Math.max(0, conteoGlobal.papas - 1);
+                        }
+                    } else if (item.idTipo === 'papas_extra') {
+                        conteoGlobal.papas = Math.max(0, conteoGlobal.papas - 1);
+                    }
+                });
+
+                // Devolver las porciones matemáticas exactas al inventario (0.025)
+                if (cantQuesoGrupo > 0) {
+                    materiaPrima.queso += (cantQuesoGrupo * 0.025);
+                }
+                if (cantFlorAndinaGrupo > 0) {
+                    materiaPrima.flor_andina += (cantFlorAndinaGrupo * 0.025);
+                }
+
+                // Eliminar el pedido del array de registros
+                registros.splice(index, 1);
+
+                // Opcional: Re-enumerar los IDs de los pedidos restantes para mantener el orden limpio continuo
+                registros.forEach((p, idx) => {
+                    p.id = idx + 1;
+                });
+
+                // Guardar los datos actualizados de vuelta en el LocalStorage
+                localStorage.setItem('registros_pedidos', JSON.stringify(registros));
+                localStorage.setItem('conteo_global', JSON.stringify(conteoGlobal));
+                localStorage.setItem('materia_prima', JSON.stringify(materiaPrima));
+
+                // Recargar la lista en pantalla
+                cargarPedidos();
+            }
+        }
+
+        function borrarTodo() {
+            if(confirm("¿Estás absolutamente seguro de que quieres borrar todos los datos de pedidos, stock y conteo? Esto no se puede deshacer.")) {
+                localStorage.clear();
+                cargarPedidos();
+            }
+        }
+
+        window.onload = cargarPedidos;
+    </script>
+</body>
+</html>
